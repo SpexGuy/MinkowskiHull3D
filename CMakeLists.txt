@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.6)
-project(StupidSHTricks)
+project(Template)
 
 message("Source " "${CMAKE_SOURCE_DIR}")
 
@@ -16,10 +16,11 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${INCLUDE})
 
 set(SOURCE_FILES main.cpp gl_includes.h legendre.h Perf.h Perf.cpp stb_image_impl.cpp)
-add_executable(StupidSHTricks ${SOURCE_FILES})
+add_executable(Template ${SOURCE_FILES})
 
-target_link_libraries(StupidSHTricks ${LIB}/libglew32.a)
-target_link_libraries(StupidSHTricks ${LIB}/libglfw3.a)
-target_link_libraries(StupidSHTricks ${OPENGL_LIBRARIES})
+target_link_libraries(Template ${LIB}/libglew32.a)
+target_link_libraries(Template ${LIB}/libglfw3.a)
+target_link_libraries(Template ${OPENGL_LIBRARIES})
+target_link_libraries(Template -static-libgcc -static-libstdc++)
 
 file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR}/)
