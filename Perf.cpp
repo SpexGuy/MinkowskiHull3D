@@ -33,6 +33,7 @@ void initPerformanceData() {
 }
 
 void printPerformanceData() {
+    if (frame_count == 0) return;
     printf("Performance - last %d frames\n", frame_count);
     printf("AVG_STAT  MAX_STAT  PER_FRAME  AVG_FRAME  MAX_FRAME  TAG\n");
     for (const PerformanceData &data : perf_stats) {
