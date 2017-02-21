@@ -15,7 +15,7 @@ link_directories(${LIB})
 include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${INCLUDE})
 
-set(SOURCE_FILES main.cpp gl_includes.h legendre.h Perf.h Perf.cpp stb_image_impl.cpp)
+set(SOURCE_FILES main.cpp gl_includes.h Perf.h Perf.cpp stb_image_impl.cpp)
 add_executable(Template ${SOURCE_FILES})
 
 target_link_libraries(Template ${LIB}/libglew32.a)
