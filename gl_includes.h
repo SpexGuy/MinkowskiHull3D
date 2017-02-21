@@ -10,9 +10,11 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#define GLSL(src) "#version 400\n" #src
+
 #define checkError() _check_gl_error(__FILE__,__LINE__)
 
-bool _check_gl_error(const char *file, int line) {
+static bool _check_gl_error(const char *file, int line) {
     bool hasError = false;
     GLenum err (glGetError());
 
