@@ -11,18 +11,31 @@
 using namespace std;
 using namespace glm;
 
+GLuint compileShader(const char *vertSrc, const char *fragSrc);
+void loadTexture(GLuint texname, const char *filename);
+
+GLFWwindow *window;
+
+
 void setup() {
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
     // TODO
     // init shaders and other global state
 }
 
 void draw() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // TODO
     // draw things
 }
 
 static void glfw_resize_callback(GLFWwindow *window, int width, int height) {
     printf("resize: %dx%d\n", width, height);
+    glViewport(0, 0, width, height);
 }
 
 static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -157,7 +170,7 @@ int main() {
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    GLFWwindow* window = glfwCreateWindow(640, 480, "SpexGuy's GLFW Template", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "SpexGuy's GLFW Template", NULL, NULL);
     if (!window) {
         cout << "Failed to create window" << endl;
         exit(-1);
@@ -171,9 +184,6 @@ int main() {
     glfwSwapInterval(1);
 
     initPerformanceData();
-
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-    glEnable(GL_DEPTH_TEST);
 
     setup();
     checkError();
