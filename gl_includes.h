@@ -12,10 +12,12 @@
 
 #define checkError() _check_gl_error(__FILE__,__LINE__)
 
-void _check_gl_error(const char *file, int line) {
+bool _check_gl_error(const char *file, int line) {
+    bool hasError = false;
     GLenum err (glGetError());
 
     while(err!=GL_NO_ERROR) {
+        hasError = true;
         const char *error;
 
         switch(err) {
@@ -29,6 +31,7 @@ void _check_gl_error(const char *file, int line) {
         std::cerr << "GL_" << error <<" - "<<file<<":"<<line<<std::endl;
         err=glGetError();
     }
+    return hasError;
 }
 
 #endif //GLERROR_H
