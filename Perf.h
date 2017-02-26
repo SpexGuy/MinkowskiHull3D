@@ -2,10 +2,10 @@
 // Created by Martin Wickham on 10/25/2016.
 //
 
-#ifndef STUPIDSHTRICKS_PERF_H
-#define STUPIDSHTRICKS_PERF_H
+#ifndef PERF_H
+#define PERF_H
 
-
+#ifdef WINDOWS
 #include <afxres.h>
 
 void initPerformanceData();
@@ -34,5 +34,15 @@ public:
     }
 };
 
+#else
+inline void initPerformanceData() {}
+inline void printPerformanceData() {}
+inline void markPerformanceFrame() {}
+#define recordPerformanceData(name, time) do {sizeof(name); sizeof(time);} while(0)
+
+struct Perf {
+    Perf(const char *name) {}
+};
+#endif
 
 #endif //STUPIDSHTRICKS_PERF_H
