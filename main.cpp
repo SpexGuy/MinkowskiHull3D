@@ -169,23 +169,27 @@ int main() {
     glfwSetErrorCallback(glfw_error_callback);
 
 #ifdef WINDOWS
+#ifdef GL_4
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#else
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+#endif
 #endif
     window = glfwCreateWindow(640, 480, "SpexGuy's GLFW Template", NULL, NULL);
     if (!window) {
         cout << "Failed to create window" << endl;
         exit(-1);
     }
-    int major, minor, rev;
-    glfwGetVersion(&major, &minor, &rev);
-    fprintf(stderr, "OpenGL version recieved: %d.%d.%d\n", major, minor, rev);
 
     glfwSetKeyCallback(window, glfw_key_callback);
     glfwSetMouseButtonCallback(window, glfw_click_callback);
 
     glfwMakeContextCurrent(window);
     glewInit();
+
+    printf("OpenGL version recieved: %s\n", glGetString(GL_VERSION));
 
     glfwSwapInterval(1);
 

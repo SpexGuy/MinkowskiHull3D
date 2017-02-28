@@ -10,10 +10,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#ifdef GL_4
-#define GLSL(src) "#version 400\n" #src
+#ifdef WINDOWS
+#   ifdef GL_4
+#       define GLSL(src) "#version 400\n" #src
+#   else
+#       define GLSL(src) "#version 320\n" #src
+#   endif
 #else
-#define GLSL(src) "#version 150\n" #src
+#   define GLSL(src) "#version 120\n" #src
 #endif
 
 

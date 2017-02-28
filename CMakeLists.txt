@@ -15,7 +15,7 @@ endif()
 
 add_definitions(-DGLEW_STATIC -D_USE_MATH_DEFINES)
 if (WIN32)
-    add_definitions(-DWINDOWS -DPERF) # perf doesn't work anywhere other than windows yet
+    add_definitions(-DGL_4 -DWINDOWS -DPERF) # perf doesn't work anywhere other than windows yet
 endif()
 
 include_directories(${INCLUDE})
@@ -24,6 +24,7 @@ set(SOURCE_FILES main.cpp gl_includes.h Perf.h Perf.cpp stb_image_impl.cpp)
 add_executable(Template ${SOURCE_FILES})
 
 if (APPLE)
+    find_package(GLEW REQUIRED)
     target_link_libraries(Template ${GLEW_LIBRARY})
     target_link_libraries(Template glfw3)
 else()
