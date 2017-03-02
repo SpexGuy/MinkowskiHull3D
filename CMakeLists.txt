@@ -15,7 +15,9 @@ endif()
 
 add_definitions(-DGLEW_STATIC -D_USE_MATH_DEFINES)
 if (WIN32)
-    add_definitions(-DGL_4 -DWINDOWS -DPERF) # perf doesn't work anywhere other than windows yet
+    add_definitions(-DWINDOWS -DPERF) # perf doesn't work anywhere other than windows yet
+elseif(APPLE)
+    add_definitions(-DAPPLE)
 endif()
 
 include_directories(${INCLUDE})

@@ -168,14 +168,11 @@ int main() {
 
     glfwSetErrorCallback(glfw_error_callback);
 
-#ifdef WINDOWS
-#ifdef GL_4
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-#else
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-#endif
+#ifdef APPLE
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
     window = glfwCreateWindow(640, 480, "SpexGuy's GLFW Template", NULL, NULL);
     if (!window) {
@@ -187,6 +184,9 @@ int main() {
     glfwSetMouseButtonCallback(window, glfw_click_callback);
 
     glfwMakeContextCurrent(window);
+
+    // If the program is crashing at glGenVertexArrays, try uncommenting this line.
+    //glewExperimental = GL_TRUE;
     glewInit();
 
     printf("OpenGL version recieved: %s\n", glGetString(GL_VERSION));

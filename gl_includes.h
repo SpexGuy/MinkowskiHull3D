@@ -10,16 +10,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#ifdef WINDOWS
-#   ifdef GL_4
-#       define GLSL(src) "#version 400\n" #src
-#   else
-#       define GLSL(src) "#version 320\n" #src
-#   endif
-#else
-#   define GLSL(src) "#version 120\n" #src
-#endif
-
+#define GLSL(src) "#version 400\n" #src
 
 #define checkError() _check_gl_error(__FILE__,__LINE__)
 
