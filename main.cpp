@@ -200,7 +200,7 @@ int main() {
 
     glfwSetFramebufferSizeCallback(window, glfw_resize_callback); // do this after setup
     int width, height;
-    glfwGetWindowSize(window, &width, &height);
+    glfwGetFramebufferSize(window, &width, &height);
     glfw_resize_callback(window, width, height); // call resize once with the initial size
 
     // make sure performance data is clean going into main loop
