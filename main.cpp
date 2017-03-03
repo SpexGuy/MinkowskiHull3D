@@ -174,7 +174,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
-    window = glfwCreateWindow(640, 480, "SpexGuy's GLFW Template", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Minkowski Hull 3D", NULL, NULL);
     if (!window) {
         cout << "Failed to create window" << endl;
         exit(-1);
