@@ -9,6 +9,7 @@
 #include <stb/stb_image.h>
 #include "gl_includes.h"
 #include "Perf.h"
+#include "hull3D.h"
 
 using namespace std;
 using namespace glm;
@@ -58,6 +59,29 @@ mat4 rotation(1); // identity
 mat4 view;
 mat4 projection;
 
+SphereCollider3D collider;
+
+SurfaceState state;
+
+void updateMesh() {
+    vector<vec3> vertNormals;
+    vertNormals.reserve(state.triangles.size() * 3 * 2); // pos + nor per vertex, 3 verts per triangle.
+    for (Triangle &tri : state.triangles) {
+        vec3 a = state.points[tri.edges[0].vertex];
+        vec3 b = state.points[tri.edges[1].vertex];
+        vec3 c = state.points[tri.edges[2].vertex];
+        vec3 normal = normalize(cross(c - b, a - b));
+        vertNormals.push_back(a);
+        vertNormals.push_back(normal);
+        vertNormals.push_back(b);
+        vertNormals.push_back(normal);
+        vertNormals.push_back(c);
+        vertNormals.push_back(normal);
+    }
+    glBufferData(GL_ARRAY_BUFFER, vertNormals.size() * sizeof(vec3), vertNormals.data(), GL_DYNAMIC_DRAW);
+    checkError();
+}
+
 void setup() {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glEnable(GL_DEPTH_TEST);
@@ -75,61 +99,30 @@ void setup() {
     glBindVertexArray(vao);
     checkError();
 
-    float verts[] = {
-         1, 1, 1,   0, 1, 0,
-         1, 1,-1,   0, 1, 0,
-        -1, 1,-1,   0, 1, 0,
-
-        -1, 1,-1,   0, 1, 0,
-        -1, 1, 1,   0, 1, 0,
-         1, 1, 1,   0, 1, 0,
-
-
-         1, 1, 1,   1, 0, 0,
-         1,-1, 1,   1, 0, 0,
-         1,-1,-1,   1, 0, 0,
-
-         1,-1,-1,   1, 0, 0,
-         1, 1,-1,   1, 0, 0,
-         1, 1, 1,   1, 0, 0,
-
-
-         1, 1, 1,   0, 0, 1,
-        -1, 1, 1,   0, 0, 1,
-        -1,-1, 1,   0, 0, 1,
-
-        -1,-1, 1,   0, 0, 1,
-         1,-1, 1,   0, 0, 1,
-         1, 1, 1,   0, 0, 1,
-    };
-
     GLuint buffer;
     glGenBuffers(1, &buffer);
-    checkError();
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    checkError();
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
     checkError();
 
     GLuint pos = glGetAttribLocation(shader, "position");
     GLuint nor = glGetAttribLocation(shader, "normal");
-    checkError();
     glEnableVertexAttribArray(pos);
     glEnableVertexAttribArray(nor);
-    checkError();
     glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), 0);
     glVertexAttribPointer(nor, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void *) (3*sizeof(float)));
     checkError();
 
     view = lookAt(vec3(0, 0, 5), vec3(0, 0, 0), vec3(0, 1, 0));
+
+    collider.radius = 2;
+    state.object = &collider;
+    state.init();
+    updateMesh();
 }
 
 void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glDrawArrays(GL_TRIANGLES, 0, 6*3);
-    // TODO
-    // draw things
 }
 
 void updateMatrices() {

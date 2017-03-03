@@ -22,7 +22,7 @@ endif()
 
 include_directories(${INCLUDE})
 
-set(SOURCE_FILES main.cpp gl_includes.h Perf.h Perf.cpp stb_image_impl.cpp)
+set(SOURCE_FILES main.cpp gl_includes.h Perf.h Perf.cpp stb_image_impl.cpp hull3D.cpp hull3D.h)
 add_executable(MinkowskiHull3D ${SOURCE_FILES})
 
 if (APPLE)
