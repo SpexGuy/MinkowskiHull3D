@@ -4,6 +4,8 @@
 #include <cmath>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/transform.hpp>
 #include <stb/stb_image.h>
 #include "gl_includes.h"
 #include "Perf.h"
@@ -16,26 +18,136 @@ void loadTexture(GLuint texname, const char *filename);
 
 GLFWwindow *window;
 
+struct {
+    GLuint normalMat;
+    GLuint mvp;
+} uniforms;
+
+const char *vert = GLSL(
+    uniform mat3 normalMat;
+    uniform mat4 mvp;
+
+    in vec3 position;
+    in vec3 normal;
+
+    flat out vec3 viewNormal;
+
+    void main() {
+        gl_Position = mvp * vec4(position, 1.0);
+        viewNormal = normalMat * normal;
+    }
+);
+
+const char *frag = GLSL(
+    const vec3 color = vec3(0.5, 0, 1);
+    const vec3 lightDir = normalize(vec3(1,1,1));
+    const float ambient = 0.2;
+
+    flat in vec3 viewNormal;
+    out vec4 litColor;
+
+    void main() {
+        vec3 normal = gl_FrontFacing ? viewNormal : -viewNormal;
+        float light = dot(normal, lightDir);
+        light = clamp(light + ambient, ambient, 1);
+        litColor = vec4(light * color, 1.0);
+    }
+);
+
+mat4 rotation(1); // identity
+mat4 view;
+mat4 projection;
 
 void setup() {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+    checkError();
 
-    // TODO
-    // init shaders and other global state
+    GLuint shader = compileShader(vert, frag);
+    glUseProgram(shader);
+    uniforms.mvp = glGetUniformLocation(shader, "mvp");
+    uniforms.normalMat = glGetUniformLocation(shader, "normalMat");
+    checkError();
+
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    checkError();
+
+    float verts[] = {
+         1, 1, 1,   0, 1, 0,
+         1, 1,-1,   0, 1, 0,
+        -1, 1,-1,   0, 1, 0,
+
+        -1, 1,-1,   0, 1, 0,
+        -1, 1, 1,   0, 1, 0,
+         1, 1, 1,   0, 1, 0,
+
+
+         1, 1, 1,   1, 0, 0,
+         1,-1, 1,   1, 0, 0,
+         1,-1,-1,   1, 0, 0,
+
+         1,-1,-1,   1, 0, 0,
+         1, 1,-1,   1, 0, 0,
+         1, 1, 1,   1, 0, 0,
+
+
+         1, 1, 1,   0, 0, 1,
+        -1, 1, 1,   0, 0, 1,
+        -1,-1, 1,   0, 0, 1,
+
+        -1,-1, 1,   0, 0, 1,
+         1,-1, 1,   0, 0, 1,
+         1, 1, 1,   0, 0, 1,
+    };
+
+    GLuint buffer;
+    glGenBuffers(1, &buffer);
+    checkError();
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    checkError();
+    glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+    checkError();
+
+    GLuint pos = glGetAttribLocation(shader, "position");
+    GLuint nor = glGetAttribLocation(shader, "normal");
+    checkError();
+    glEnableVertexAttribArray(pos);
+    glEnableVertexAttribArray(nor);
+    checkError();
+    glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), 0);
+    glVertexAttribPointer(nor, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void *) (3*sizeof(float)));
+    checkError();
+
+    view = lookAt(vec3(0, 0, 5), vec3(0, 0, 0), vec3(0, 1, 0));
 }
 
 void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glDrawArrays(GL_TRIANGLES, 0, 6*3);
     // TODO
     // draw things
+}
+
+void updateMatrices() {
+    mat4 mvp = projection * view * rotation;
+    checkError();
+    glUniformMatrix4fv(uniforms.mvp, 1, GL_FALSE, &mvp[0][0]);
+    mat3 normal = mat3(view * rotation);
+    glUniformMatrix3fv(uniforms.normalMat, 1, GL_FALSE, &normal[0][0]);
 }
 
 static void glfw_resize_callback(GLFWwindow *window, int width, int height) {
     printf("resize: %dx%d\n", width, height);
     glViewport(0, 0, width, height);
+    if (height != 0) {
+        float aspect = float(width) / height;
+        projection = perspective(62.f, aspect, 0.5f, 10.f);
+        updateMatrices();
+    }
 }
 
 static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -50,14 +162,35 @@ static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int act
     }
 }
 
-static void glfw_click_callback(GLFWwindow *window, int button, int action, int mods) {
-    if (action != GLFW_RELEASE) return;
+vec2 lastMouse = vec2(-1,-1);
 
+static void glfw_click_callback(GLFWwindow *window, int button, int action, int mods) {
     double x, y;
     glfwGetCursorPos(window, &x, &y);
 
-    // TODO
-    // mouse clicks
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW_PRESS) lastMouse = vec2(x, y);
+        else if (action == GLFW_RELEASE) lastMouse = vec2(-1, -1);
+    }
+}
+
+static void glfw_mouse_callback(GLFWwindow *window, double xPos, double yPos) {
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_PRESS) return;
+    if (lastMouse == vec2(-1,-1)) {
+        lastMouse = vec2(xPos, yPos);
+        return; // can't update this frame, no previous data.
+    } else {
+        vec2 current = vec2(xPos, yPos);
+        vec2 delta = current - lastMouse;
+        if (delta == vec2(0,0)) return;
+
+        vec3 rotationVector = vec3(delta.y, delta.x, 0);
+        float angle = length(delta);
+        rotation = rotate(angle, rotationVector) * rotation;
+        updateMatrices();
+
+        lastMouse = current;
+    }
 }
 
 void glfw_error_callback(int error, const char* description) {
@@ -182,6 +315,7 @@ int main() {
 
     glfwSetKeyCallback(window, glfw_key_callback);
     glfwSetMouseButtonCallback(window, glfw_click_callback);
+    glfwSetCursorPosCallback(window, glfw_mouse_callback);
 
     glfwMakeContextCurrent(window);
 
