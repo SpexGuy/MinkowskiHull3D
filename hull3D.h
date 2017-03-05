@@ -7,6 +7,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <cstdint>
 
 struct Collider3D {
     virtual glm::vec3 findSupport(glm::vec3 direction) = 0;
