@@ -57,9 +57,13 @@ const char *frag = GLSL(
     }
 );
 
-mat4 rotation(1); // identity
+mat4 rotation; // identity
 mat4 view;
 mat4 projection;
+
+int animationStepsLeft = 0;
+int animationFramesLeft = 0;
+int animationFrameReset = 30;
 
 SphereCollider3D collider;
 
@@ -163,8 +167,8 @@ void setup() {
     glVertexAttribPointer(col, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) (sizeof(vec3) * 2));
     checkError();
 
-    float camPos = 5 / sqrt(3.f);
-    view = lookAt(vec3(camPos), vec3(0), vec3(0, 1, 0));
+    view = lookAt(vec3(0, 0, 5), vec3(0), vec3(0, 1, 0));
+    rotation = lookAt(vec3(0), vec3(-1), vec3(0, 1, 0));
 
     collider.radius = 2;
     state.object = &collider;
@@ -206,8 +210,12 @@ static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int act
         wireframe = !wireframe;
         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
     } else if (key == GLFW_KEY_S) {
-        state.step();
-        updateMesh();
+        if (mods & GLFW_MOD_SHIFT) {
+            animationStepsLeft = 10;
+        } else {
+            state.step();
+            updateMesh();
+        }
     } else if (key == GLFW_KEY_D) {
         dumpState();
     }
