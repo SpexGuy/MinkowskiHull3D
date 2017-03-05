@@ -137,7 +137,7 @@ void updateMesh() {
 void setup() {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glEnable(GL_DEPTH_TEST);
-    //glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     checkError();
 
     GLuint shader = compileShader(vert, frag);
