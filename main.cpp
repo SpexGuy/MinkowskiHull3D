@@ -63,7 +63,7 @@ mat4 projection;
 
 int animationStepsLeft = 0;
 int animationFramesLeft = 0;
-int animationFrameReset = 30;
+int animationFrameReset = 15;
 
 SphereCollider3D collider;
 
@@ -178,6 +178,20 @@ void setup() {
 }
 
 void draw() {
+    if (animationStepsLeft > 0) {
+        if (animationFramesLeft <= 0) {
+            state.step();
+            updateMesh();
+            animationFramesLeft = animationFrameReset;
+            animationStepsLeft--;
+        }
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+            animationFramesLeft -= 3;
+        } else {
+            animationFramesLeft--;
+        }
+    }
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, numVerts);
 }
@@ -211,11 +225,16 @@ static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int act
         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
     } else if (key == GLFW_KEY_S) {
         if (mods & GLFW_MOD_SHIFT) {
-            animationStepsLeft = 10;
+            animationStepsLeft = 15;
         } else {
             state.step();
             updateMesh();
         }
+    } else if (key == GLFW_KEY_A) {
+        animationStepsLeft = numeric_limits<int>::max();
+    } else if (key == GLFW_KEY_X) {
+        animationStepsLeft = 0;
+        animationFramesLeft = 0;
     } else if (key == GLFW_KEY_D) {
         dumpState();
     }
