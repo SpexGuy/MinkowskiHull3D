@@ -71,6 +71,11 @@ struct Triangle {
     HalfEdge edges[3];
 };
 
+inline uint16_t prevEdge(uint16_t edge) {
+    edge--;
+    return uint16_t((edge & 3) == 0 ? edge + 3 : edge);
+}
+
 struct SurfaceState {
     Collider3D *object;
     float epsilon;
@@ -81,12 +86,13 @@ struct SurfaceState {
     void init();
     void step();
     inline bool done() {
-        return current == 65535;
+        return current >= triangles.size();
     }
     inline HalfEdge *edges() {
         static_assert(sizeof(Triangle) == 4 * sizeof(HalfEdge), "Four HalfEdges must be the same size as a Triangle."); // this is necessary for the indexing scheme
         return reinterpret_cast<HalfEdge *>(&triangles[0]);
     }
+    void maybeSwapEdge(uint16_t edge);
 };
 
 #endif //MINKOWSKIHULL3D_HULL3D_H

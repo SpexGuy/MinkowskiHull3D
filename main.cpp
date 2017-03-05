@@ -25,33 +25,35 @@ struct {
 } uniforms;
 
 const char *vert = GLSL(
+    const vec3 lightDir = normalize(vec3(1,1,1));
+    const float ambient = 0.2;
+
     uniform mat3 normalMat;
     uniform mat4 mvp;
 
     in vec3 position;
     in vec3 normal;
+    in vec3 color;
 
-    flat out vec3 viewNormal;
+    flat out vec3 litColor;
 
     void main() {
+        // lighting is not realistic. Meant just to distinguish the faces.
         gl_Position = mvp * vec4(position, 1.0);
-        viewNormal = normalMat * normal;
+        vec3 normal = normalMat * normal;
+        float light = dot(normal, lightDir) / 2 + 0.5;
+        light = light + ambient * (1 - light);
+        litColor = light * color;
     }
 );
 
 const char *frag = GLSL(
-    const vec3 color = vec3(0.5, 0, 1);
-    const vec3 lightDir = normalize(vec3(1,1,1));
-    const float ambient = 0.2;
 
-    flat in vec3 viewNormal;
-    out vec4 litColor;
+    flat in vec3 litColor;
+    out vec4 fragColor;
 
     void main() {
-        vec3 normal = gl_FrontFacing ? viewNormal : -viewNormal;
-        float light = dot(normal, lightDir);
-        light = clamp(light + ambient, ambient, 1);
-        litColor = vec4(light * color, 1.0);
+        fragColor = vec4(litColor, 1);
     }
 );
 
@@ -63,29 +65,75 @@ SphereCollider3D collider;
 
 SurfaceState state;
 
+int numVerts;
+
+struct Vertex {
+    vec3 position;
+    vec3 normal;
+    vec3 color;
+};
+
+void dumpState() {
+    printf("Points:\n");
+    for (int c = 0, n = state.points.size(); c < n; c++) {
+        vec3 &pt = state.points[c];
+        printf("  %2d: (%f, %f, %f)\n", c, pt.x, pt.y, pt.z);
+    }
+
+    printf("\nTriangles:\n");
+    for (int c = 0, n = state.triangles.size(); c < n; c++) {
+        Triangle &tri = state.triangles[c];
+        printf("  %2d: (%d %d %d), by (%d:%d, %d:%d, %d:%d)\n",
+            c, tri.edges[0].vertex, tri.edges[1].vertex, tri.edges[2].vertex,
+               tri.edges[0].opposite / 4, tri.edges[0].opposite & 3,
+               tri.edges[1].opposite / 4, tri.edges[1].opposite & 3,
+               tri.edges[2].opposite / 4, tri.edges[2].opposite & 3);
+    }
+
+    printf("\nCurrent: %d\n\n", state.current);
+}
+
+const vec3 kOutsideColor = vec3(1, 0.5, 0);
+const vec3 kInsideColor = vec3(0.5, 0, 1);
+const vec3 kNextColor = vec3(0, 1, 0.5);
+
 void updateMesh() {
-    vector<vec3> vertNormals;
-    vertNormals.reserve(state.triangles.size() * 3 * 2); // pos + nor per vertex, 3 verts per triangle.
-    for (Triangle &tri : state.triangles) {
+    vector<Vertex> verts;
+    verts.reserve(state.triangles.size() * 3); // 3 verts per triangle.
+//    int tri0 = -1, tri1 = -1, tri2 = -1;
+//    if (!state.done()) {
+//        tri0 = state.triangles[state.current].edges[0].opposite / 4;
+//        tri1 = state.triangles[state.current].edges[1].opposite / 4;
+//        tri2 = state.triangles[state.current].edges[2].opposite / 4;
+//    }
+    for (int i = 0, n = state.triangles.size(); i < n; i++) {
+        Triangle &tri = state.triangles[i];
         vec3 a = state.points[tri.edges[0].vertex];
         vec3 b = state.points[tri.edges[1].vertex];
         vec3 c = state.points[tri.edges[2].vertex];
         vec3 normal = normalize(cross(c - b, a - b));
-        vertNormals.push_back(a);
-        vertNormals.push_back(normal);
-        vertNormals.push_back(b);
-        vertNormals.push_back(normal);
-        vertNormals.push_back(c);
-        vertNormals.push_back(normal);
+
+        Vertex vert;
+        vert.position = a;
+        vert.normal = normal;
+        vert.color = i < state.current ? kOutsideColor : i == state.current ? kNextColor : kInsideColor;
+//        if (i == tri0 || i == tri1 || i == tri2) vert.color = vec3(1,0,0);
+        verts.push_back(vert);
+        vert.position = b;
+        verts.push_back(vert);
+        vert.position = c;
+        verts.push_back(vert);
+
     }
-    glBufferData(GL_ARRAY_BUFFER, vertNormals.size() * sizeof(vec3), vertNormals.data(), GL_DYNAMIC_DRAW);
+    numVerts = verts.size();
+    glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(Vertex), verts.data(), GL_DYNAMIC_DRAW);
     checkError();
 }
 
 void setup() {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glEnable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    //glDisable(GL_CULL_FACE);
     checkError();
 
     GLuint shader = compileShader(vert, frag);
@@ -106,23 +154,28 @@ void setup() {
 
     GLuint pos = glGetAttribLocation(shader, "position");
     GLuint nor = glGetAttribLocation(shader, "normal");
+    GLuint col = glGetAttribLocation(shader, "color");
     glEnableVertexAttribArray(pos);
     glEnableVertexAttribArray(nor);
-    glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), 0);
-    glVertexAttribPointer(nor, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void *) (3*sizeof(float)));
+    glEnableVertexAttribArray(col);
+    glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glVertexAttribPointer(nor, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) sizeof(vec3));
+    glVertexAttribPointer(col, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *) (sizeof(vec3) * 2));
     checkError();
 
-    view = lookAt(vec3(0, 0, 5), vec3(0, 0, 0), vec3(0, 1, 0));
+    float camPos = 5 / sqrt(3.f);
+    view = lookAt(vec3(camPos), vec3(0), vec3(0, 1, 0));
 
     collider.radius = 2;
     state.object = &collider;
+    state.epsilon = 0.05;
     state.init();
     updateMesh();
 }
 
 void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDrawArrays(GL_TRIANGLES, 0, 6*3);
+    glDrawArrays(GL_TRIANGLES, 0, numVerts);
 }
 
 void updateMatrices() {
@@ -152,6 +205,11 @@ static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int act
         static bool wireframe = false;
         wireframe = !wireframe;
         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+    } else if (key == GLFW_KEY_S) {
+        state.step();
+        updateMesh();
+    } else if (key == GLFW_KEY_D) {
+        dumpState();
     }
 }
 
