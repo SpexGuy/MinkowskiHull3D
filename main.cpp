@@ -65,7 +65,9 @@ int animationStepsLeft = 0;
 int animationFramesLeft = 0;
 int animationFrameReset = 15;
 
-SphereCollider3D collider;
+SphereCollider3D sphere;
+PointHullCollider3D points;
+AddCollider3D combined;
 
 SurfaceState state;
 
@@ -170,9 +172,15 @@ void setup() {
     view = lookAt(vec3(0, 0, 5), vec3(0), vec3(0, 1, 0));
     rotation = lookAt(vec3(0), vec3(-1), vec3(0, 1, 0));
 
-    collider.radius = 2;
-    state.object = &collider;
-    state.epsilon = 0.01;
+    sphere.radius = 0.3;
+    points.points.emplace_back(0, -1.7, 0);
+    points.points.emplace_back(0, 1.7, 0);
+    points.points.emplace_back(1, 0, 1);
+    points.points.emplace_back(-1, 0, 1);
+    combined.a = &sphere;
+    combined.b = &points;
+    state.object = &combined;
+    state.epsilon = 0.001;
     state.init();
     updateMesh();
 }
