@@ -172,7 +172,7 @@ void setup() {
 
     collider.radius = 2;
     state.object = &collider;
-    state.epsilon = 0.05;
+    state.epsilon = 0.01;
     state.init();
     updateMesh();
 }
@@ -186,7 +186,11 @@ void draw() {
             animationStepsLeft--;
         }
         if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-            animationFramesLeft -= 3;
+            if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT)) {
+                animationFramesLeft -= 15;
+            } else {
+                animationFramesLeft -= 3;
+            }
         } else {
             animationFramesLeft--;
         }
@@ -223,6 +227,8 @@ static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int act
         static bool wireframe = false;
         wireframe = !wireframe;
         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+        if (wireframe) glDisable(GL_CULL_FACE);
+        else glEnable(GL_CULL_FACE);
     } else if (key == GLFW_KEY_S) {
         if (mods & GLFW_MOD_SHIFT) {
             animationStepsLeft = 15;
