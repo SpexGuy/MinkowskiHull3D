@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.4)
 project(MinkowskiHull3D)
 
 message("Source " "${CMAKE_SOURCE_DIR}")
@@ -26,11 +26,12 @@ set(SOURCE_FILES main.cpp gl_includes.h Perf.h Perf.cpp stb_image_impl.cpp hull3
 add_executable(MinkowskiHull3D ${SOURCE_FILES})
 
 if (APPLE)
-    find_package(GLEW REQUIRED)
-    target_link_libraries(MinkowskiHull3D ${GLEW_LIBRARY})
-    target_link_libraries(MinkowskiHull3D glfw3)
+    set(LIB "${CMAKE_SOURCE_DIR}/lib/osx")
+    link_directories(${LIB})
+    target_link_libraries(MinkowskiHull3D ${LIB}/libGLEW.a)
+    target_link_libraries(MinkowskiHull3D ${LIB}/libglfw3.a)
 else()
-    set(LIB "${CMAKE_SOURCE_DIR}/lib")
+    set(LIB "${CMAKE_SOURCE_DIR}/lib/windows")
     link_directories(${LIB})
     target_link_libraries(MinkowskiHull3D ${LIB}/libglew32.a)
     target_link_libraries(MinkowskiHull3D ${LIB}/libglfw3.a)
