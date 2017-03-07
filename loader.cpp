@@ -145,7 +145,7 @@ bool load(const char *filename, SurfaceState *state) {
 
     vector<Symbol> symbols;
     bool hasEpsilon = false;
-    bool hasCombined = false;
+    bool hasObject = false;
 
     int lineNum = 0;
     string line;
@@ -194,9 +194,19 @@ bool load(const char *filename, SurfaceState *state) {
 
         if (symbol.name == "object") {
             state->object = symbol.value;
-            hasCombined = true;
+            hasObject = true;
         }
     }
 
-    return hasEpsilon && hasCombined;
+    if (!hasEpsilon) {
+        printf("Error: No epsilon specified.\n");
+        return false;
+    }
+
+    if (!hasObject) {
+        printf("Error: No object specified.\n");
+        return false;
+    }
+
+    return true;
 }
