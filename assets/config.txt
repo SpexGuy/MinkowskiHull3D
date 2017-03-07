@@ -1,0 +1,23 @@
+# This file configures the collider used by the program.
+# Each line is composed of
+# <identifier> <type> <params...>
+# There are two special identifiers:
+# - epsilon, which sets the maximum distance between the generated mesh and the actual surface, and
+# - object, which sets the collider that the program will use.
+# A valid configuration must specify both epsilon and object.
+#
+# There are five supported types:
+# sphere <radius>                    -- A sphere centered at the origin with the specified radius
+# points <x> <y> <z> <x> <y> <z>...  -- The convex hull of a set of points
+# point <x> <y> <z>                  -- A single point. Useful for offsetting a shape.
+# add <identifierA> <identifierB>    -- The minkowski sum of two colliders.
+# sub <identifierA> <identifierB>    -- The "minkowski difference" ({ X | X = A - B }) of two colliders.
+
+sphere   sphere 0.3
+tet   points  0 -0.5 0.5  0 -0.5 -0.5  0 1 0  1 0 0
+pos   add sphere tet
+
+tet2   points  -1 1 0  -1 -1 0  1 0 -1  1 0 1
+
+object   sub pos tet2
+epsilon   0.005

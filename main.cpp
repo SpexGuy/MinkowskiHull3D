@@ -10,6 +10,7 @@
 #include "gl_includes.h"
 #include "Perf.h"
 #include "hull3D.h"
+#include "loader.h"
 
 using namespace std;
 using namespace glm;
@@ -172,15 +173,18 @@ void setup() {
     view = lookAt(vec3(0, 0, 5), vec3(0), vec3(0, 1, 0));
     rotation = lookAt(vec3(0), vec3(-1), vec3(0, 1, 0));
 
-    sphere.radius = 0.3;
-    points.points.emplace_back(0, -1.7, 0);
-    points.points.emplace_back(0, 1.7, 0);
-    points.points.emplace_back(1, 0, 1);
-    points.points.emplace_back(-1, 0, 1);
-    combined.a = &sphere;
-    combined.b = &points;
-    state.object = &combined;
-    state.epsilon = 0.001;
+    if (!load("assets/config.txt", &state)) {
+        printf("Failed to load config.txt, using default collider instead.\n");
+        sphere.radius = 0.3;
+        points.points.emplace_back(0, -1.7, 0);
+        points.points.emplace_back(0, 1.7, 0);
+        points.points.emplace_back(1, 0, 1);
+        points.points.emplace_back(-1, 0, 1);
+        combined.a = &sphere;
+        combined.b = &points;
+        state.object = &combined;
+        state.epsilon = 0.001;
+    }
     state.init();
     updateMesh();
 }
